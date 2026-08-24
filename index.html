@@ -1,21 +1,41 @@
-<script src="https://unpkg.com/peerjs@1.4.7/dist/peerjs.min.js"></script>
-<script>
-    // Connexion au serveur PeerJS public gratuit
-    const peer = new Peer(); 
-    
-    peer.on('open', (id) => {
-        console.log('Mon ID est : ' + id);
-        alert('Partage cet ID : ' + id); // Ou affiche-le à l'écran
-    });
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <title>Récepteur PeerJS</title>
+</head>
+<body>
 
-    // Quand quelqu'un (le surveillant) appelle
-    peer.on('call', (call) => {
-        navigator.mediaDevices.getUserMedia({ video: true, audio: false })
-            .then((stream) => {
-                call.answer(stream); // Répondre avec le flux vidéo
-                const video = document.getElementById('remoteVideo');
-                video.srcObject = stream;
-                video.play();
-            });
-    });
-</script>
+    <h2>Récepteur vidéo</h2>
+    <!-- Affichage de l'ID du destinataire -->
+    <p>Ton ID à donner à l'émetteur : <b id="my-id">Connexion...</b></p>
+
+    <script src="https://unpkg.com/peerjs@1.4.7/dist/peerjs.min.js"></script>
+    <script>
+        const peer = new Peer();
+
+        // Afficher l'ID dès qu'il est généré
+        peer.on('open', (id) => {
+            document.getElementById('my-id').textContent = id;
+            console.log('Mon ID :', id);
+        });
+
+        // Écouter les appels entrants
+        peer.on('call', async (call) => {
+            try {
+                // Demander l'accès à la caméra et au micro
+                const localStream = await navigator.mediaDevices.getUserMedia({
+                    video: true,
+                    audio: true
+                });
+
+                // Répondre à l'appel en envoyant le flux local
+                call.answer(localStream);
+
+            } catch (err) {
+                console.error('Erreur d\'accès à la caméra :', err);
+            }
+        });
+    </script>
+</body>
+</html>
