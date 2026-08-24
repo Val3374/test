@@ -1,52 +1,21 @@
-<!DOCTYPE html>
-<html lang="fr">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Caméra à distance</title>
-    <style>
-        body { margin: 0; background: #000; display: flex; justify-content: center; align-items: center; height: 100vh; }
-        video { width: 100%; height: 100%; object-fit: cover; }
-        #controls { position: absolute; top: 10px; left: 10px; z-index: 10; }
-        button { padding: 10px 20px; font-size: 16px; cursor: pointer; }
-    </style>
-</head>
-<body>
+<script src="https://unpkg.com/peerjs@1.4.7/dist/peerjs.min.js"></script>
+<script>
+    // Connexion au serveur PeerJS public gratuit
+    const peer = new Peer(); 
+    
+    peer.on('open', (id) => {
+        console.log('Mon ID est : ' + id);
+        alert('Partage cet ID : ' + id); // Ou affiche-le à l'écran
+    });
 
-    <div id="controls">
-        <button onclick="startCamera()">Démarrer la caméra</button>
-    </div>
-    <video id="remoteVideo" autoplay playsinline muted></video>
-
-    <script>
-        const video = document.getElementById('remoteVideo');
-        
-        async function startCamera() {
-            try {
-                // Demande l'accès à la caméra (privilégie la caméra arrière si possible)
-                const stream = await navigator.mediaDevices.getUserMedia({
-                    video: { 
-                        facingMode: "environment", // "user" pour le selfie, "environment" pour l'arrière
-                        width: { ideal: 1920 },
-                        height: { ideal: 1080 }
-                    },
-                    audio: false
-                });
-                
+    // Quand quelqu'un (le surveillant) appelle
+    peer.on('call', (call) => {
+        navigator.mediaDevices.getUserMedia({ video: true, audio: false })
+            .then((stream) => {
+                call.answer(stream); // Répondre avec le flux vidéo
+                const video = document.getElementById('remoteVideo');
                 video.srcObject = stream;
-            } catch (err) {
-                alert("Erreur caméra : " + err.message);
-                console.error(err);
-            }
-        }
-
-        // Lance l'auto-démarrage si possible (certains navigateurs bloquent sans interaction utilisateur)
-        document.body.addEventListener('click', () => {
-            if (!video.srcObject) {
-                startCamera();
-            }
-        }, { once: true });
-    </script>
-
-</body>
-</html>
+                video.play();
+            });
+    });
+</script>
